@@ -13,7 +13,7 @@ def getFullDirectoryPath(directoryName):
 def createDirectoryIfNeeded(directoryName):
     if (os.path.isdir(directoryName)):
         return
-    print("Creating directory" + directoryName)
+    #print("Creating directory" + directoryName)
     os.makedirs(directoryName)
 
 
