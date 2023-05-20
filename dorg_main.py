@@ -21,6 +21,8 @@ try:
     dof = dicomOrganizerFinder(doa)
     origFoundData = dof.getDICOMData()
 
+    
+
     do = dicomOrganizer(doa)
     dos = dicomOrganizerSOPSuffixList()
     do.organizeData(origFoundData, dos)

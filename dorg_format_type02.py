@@ -5,7 +5,7 @@ import dorg_utilities
 import os_utilities
 
 
-class dicomFormatter_type01:
+class dicomFormatter_type02:
 
     def __init__(self):
         pass
@@ -17,7 +17,7 @@ class dicomFormatter_type01:
         studyID = dorg_utilities.getStudyID(df)
         seriesNumber = dorg_utilities.getSeriesNumber(df)
         prefix = dorg_utilities.getSOPprefix(df, dos)
-
+        seriesDescription = dorg_utilities.getSeriesDescription(df)
         #print("Patient Name of " + patientName)
         #print("Patient ID of " + patientID)
         #print("Study Date of " + studyDate)
@@ -25,23 +25,23 @@ class dicomFormatter_type01:
         #print("Series Number of " + seriesNumber)
 
         path1 = "%s" % (outputDirectory)
-        path2 = "%s-%s" % (patientName, patientID)
+        path2 = "%s" % (patientID)
         path1 = os_utilities.joinPaths(path1, path2)
+
         path2 = "%s-%s" % (studyDate, studyID)
         path1 = os_utilities.joinPaths(path1, path2)
+
         path2 = "%s_%s" % (prefix, seriesNumber)
+        path1 = os_utilities.joinPaths(path1, path2)
+
+        path2 = "%s" % (seriesDescription)
         fileDirectory = os_utilities.joinPaths(path1, path2)
-        #print("Returning output directory of %s" % (fileDirectory))
 
         return fileDirectory
 
     def getOutputName(self, df):
-        seriesDescription = dorg_utilities.getSeriesDescription(df)
         instanceNumber = dorg_utilities.getInstanceNumber(df)
-        #print("Series Description of " + seriesDescription)
-        #print("Instance Number of " + instanceNumber)
-        fileName = "%s_%s.dcm" % (seriesDescription, instanceNumber)
-
+        fileName = "%s.dcm" % (instanceNumber)
         return fileName
 
     def organizeDataByInstanceNumberAndCreator(self):

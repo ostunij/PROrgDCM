@@ -5,7 +5,7 @@ import filecmp
 import shutil
 import os_utilities
 from dorg_args import dicomOrganizerArgs
-from dorg_format_type01 import dicomFormatter
+
 
 
 class dicomOrganizer:
@@ -31,10 +31,10 @@ class dicomOrganizer:
 
         os_utilities.createDirectoryIfNeeded(self.dicomOutputDirectory)
         self.prefix = doa.getPrefix()
+        self.formatter = doa.getFormatter()
 
     def organizeData(self, fileList, dos):
         self.fileList = fileList
-        formatter = dicomFormatter()
 
         for f in self.fileList:
             try:
@@ -44,12 +44,12 @@ class dicomOrganizer:
                 self.fileList.remove(f)
                 continue
 
-            outputDirectory = formatter.getOutputDirectory(df, self.dicomOutputDirectory, dos)
+            outputDirectory = self.formatter.getOutputDirectory(df, self.dicomOutputDirectory, dos)
             if (not outputDirectory in self.seriesOutputDirectoriesList):
                 os_utilities.createDirectoryIfNeeded(outputDirectory)
                 self.seriesOutputDirectoriesList.append(outputDirectory)
 
-            outputName = formatter.getOutputName(df)
+            outputName = self.formatter.getOutputName(df)
             #print("%s -> %s/%s" % (f, outputDirectory, outputName))
             self.renameItemsDict[f] = "%s/%s" % (outputDirectory, outputName)
 

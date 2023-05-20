@@ -1,20 +1,21 @@
 import sys
 import os
 from optparse import OptionParser
+from dorg_format_type01 import dicomFormatter_type01
+from dorg_format_type02 import dicomFormatter_type02
 
 class dicomOrganizerArgs:
     def __init__(self):
         usage = 'usage: %prog [options] directoryName'
         self.parser = OptionParser(usage=usage, add_help_option=False)
-        self.__setOptions()
-        self.__readOptions()
-        self.__checkOptions()
+        self.setOptions()
+        self.readOptions()
+        self.checkOptions()
         if self.verbose:
-            self.__preamble()
-            self.__printOptions()
-        #self.__readSOPprefixlist()
+            self.preamble()
+            self.printOptions()
 
-    def __setOptions(self):
+    def setOptions(self):
         self.parser.add_option("-o", "--outdir", action="store", type="string",
                                dest="outdir", help="output directory -- default is cwd", default=os.getcwd())
         self.parser.add_option("-r", "--removeorigdata", action="store_true", dest="removeorigdata",
@@ -29,8 +30,10 @@ class dicomOrganizerArgs:
                                dest="verbose", help="verbose mode", default=False)
         self.parser.add_option("-h", "--help", action="store_true",
                                dest="help", help="print help", default=False)
+        self.parser.add_option("-f", "--format", action="store",
+                               type="int", dest="formattype", help="format type", default=1)
 
-    def __readOptions(self):
+    def readOptions(self):
         (options, args) = self.parser.parse_args()
         if options.help:
             self.__preamble()
@@ -42,9 +45,10 @@ class dicomOrganizerArgs:
         self.verbose = options.verbose
         self.outdir = options.outdir
         self.prefix = options.prefix
+        self.formattype = options.formattype
         self.programArgs = args
 
-    def __checkOptions(self):
+    def checkOptions(self):
         if not os.path.exists(self.outdir):
             os.makedirs(self.outdir, 0o755)
 
@@ -91,12 +95,12 @@ class dicomOrganizerArgs:
             sys.stderr.write(errorLine)
             sys.exit(1)
 
-    def __preamble(self):
+    def preamble(self):
         print("PackRat Software")
         print("John Ostuni, ostunij@mail.nih.gov (NIH/NIAAA)")
         print()
 
-    def __printOptions(self):
+    def printOptions(self):
         print("Input directory: ")
         print("\t %s " % self.seriesInputDirectory)
 
@@ -119,12 +123,19 @@ class dicomOrganizerArgs:
 
     def getVerboseMode(self):
         return self.verbose
-    
+
     def getInputDirectory(self):
         return self.seriesInputDirectory
-    
+
     def getOutputDirectory(self):
         return self.seriesOutputDirectory
-    
+
     def getPrefix(self):
         return self.prefix
+
+    def getFormatter(self):
+        if (self.formattype == 1):
+            formatter = dicomFormatter_type01()
+        elif (self.formattype == 2):
+            formatter = dicomFormatter_type02()
+        return formatter
