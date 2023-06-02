@@ -57,7 +57,7 @@ def getStudyDate(fileDataSet):
     possibleTagList = []
     possibleTagList.append((0x0008, 0x0020))  # study Date
     possibleTagList.append((0x0008, 0x0021))  # series Date
-    possibleTagList.append((0x0008, 0x0022))  # Acquisition Date
+    possibleTagList.append((0x0008, 0x0022))  # acquisition Date
     possibleTagList.append((0x0008, 0x0023))  # content Date
     valueFound = False
     defaultValue = "19000101"
@@ -109,7 +109,7 @@ def getStudyID(fileDataSet):
 
 def getSeriesDescription(fileDataSet):
     possibleTagList = []
-    possibleTagList.append((0x0008, 0x103E))  # study ID
+    possibleTagList.append((0x0008, 0x103E))  # series Description
 
     valueFound = False
     defaultValue = "NO_DESCRIPTION"
@@ -117,6 +117,67 @@ def getSeriesDescription(fileDataSet):
     for tag in possibleTagList:
         if tag in fileDataSet:
             tagValue = fileDataSet[tag].value
+            tagValueString = "%s" % tagValue
+            tagValueString = tagValueString.strip()
+            valueFound = True
+            break
+
+    if valueFound:
+        tagValueString = re.sub('[^a-zA-Z0-9_]', '_', tagValueString)
+        tagValueString = re.sub('_+', '_', tagValueString)
+        #tagValueString = re.sub('^_', '', tagValueString)
+        #tagValueString = re.sub('_$', '', tagValueString)
+        tagValueString = re.sub('_', '', tagValueString)
+    else:
+        tagValue = defaultValue
+        tagValueString = "%s" % tagValue
+
+    tagValueString = tagValueString.strip()
+    tagValueString = tagValueString.lower()
+
+    return tagValueString
+
+def getAccessionNumber(fileDataSet):
+    possibleTagList = []
+    possibleTagList.append((0x0008, 0x0050))  # accession Number
+
+    valueFound = False
+    defaultValue = "No_Accession_Number"
+
+    for tag in possibleTagList:
+        if tag in fileDataSet:
+            tagValue = fileDataSet[tag].value
+            print("tag value is " + tagValue)
+            tagValueString = "%s" % tagValue
+            tagValueString = tagValueString.strip()
+            valueFound = True
+            break
+
+    if valueFound:
+        tagValueString = re.sub('[^a-zA-Z0-9_]', '_', tagValueString)
+        tagValueString = re.sub('_+', '_', tagValueString)
+        #tagValueString = re.sub('^_', '', tagValueString)
+        #tagValueString = re.sub('_$', '', tagValueString)
+        tagValueString = re.sub('_', '', tagValueString)
+    else:
+        tagValue = defaultValue
+        tagValueString = "%s" % tagValue
+
+    tagValueString = tagValueString.strip()
+    tagValueString = tagValueString.lower()
+
+    return tagValueString
+
+def getStationName(fileDataSet):
+    possibleTagList = []
+    possibleTagList.append((0x0008, 0x1010))  # station Name
+    valueFound = False
+    defaultValue = "None_Provided"
+
+    for tag in possibleTagList:
+        if tag in fileDataSet:
+            tagValue = fileDataSet[tag].value
+            print("tag value is " + tagValue)
             tagValueString = "%s" % tagValue
             tagValueString = tagValueString.strip()
             valueFound = True

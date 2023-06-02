@@ -3,14 +3,17 @@ import re
 import pydicom
 import dorg_utilities
 import os_utilities
-
+# FORMAT: PATIENTNAME-PATIENTID
+# FORMAT: /STUDYDATE-STUDYID
+# FORMAT: /PREFIX_SERIESNUMBER
+# FORMAT: /SERIESDESCRIPTION_INSTANCENUMBER.dcm
 
 class dicomFormatter_type01:
 
     def __init__(self):
         pass
 
-    def getOutputDirectory(self, df, outputDirectory, dos):
+    def getOutputDirectories(self, df, outputDirectory, dos):
         patientName = dorg_utilities.getPatientName(df)
         patientID = dorg_utilities.getPatientID(df)
         studyDate = dorg_utilities.getStudyDate(df)
@@ -26,16 +29,17 @@ class dicomFormatter_type01:
 
         path1 = "%s" % (outputDirectory)
         path2 = "%s-%s" % (patientName, patientID)
-        path1 = os_utilities.joinPaths(path1, path2)
+        patientDirectory = os_utilities.joinPaths(path1, path2)
+
         path2 = "%s-%s" % (studyDate, studyID)
-        path1 = os_utilities.joinPaths(path1, path2)
+        studyDirectory = os_utilities.joinPaths(patientDirectory, path2)
+       
         path2 = "%s_%s" % (prefix, seriesNumber)
-        fileDirectory = os_utilities.joinPaths(path1, path2)
-        #print("Returning output directory of %s" % (fileDirectory))
+        seriesDirectory = os_utilities.joinPaths(studyDirectory, path2)
 
-        return fileDirectory
+        return (studyDirectory, seriesDirectory)
 
-    def getOutputName(self, df):
+    def getOutputFilename(self, df):
         seriesDescription = dorg_utilities.getSeriesDescription(df)
         instanceNumber = dorg_utilities.getInstanceNumber(df)
         #print("Series Description of " + seriesDescription)

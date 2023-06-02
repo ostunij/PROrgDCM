@@ -21,6 +21,7 @@ class dicomOrganizer:
         self.fileList = None
         self.fileListExisting = None
         self.seriesOutputDirectoriesList = []
+        self.studyOutputDirectoriesList = []
         self.readArguments(do_args)
 
     def readArguments(self, doa):
@@ -44,14 +45,16 @@ class dicomOrganizer:
                 self.fileList.remove(f)
                 continue
 
-            outputDirectory = self.formatter.getOutputDirectory(df, self.dicomOutputDirectory, dos)
-            if (not outputDirectory in self.seriesOutputDirectoriesList):
-                os_utilities.createDirectoryIfNeeded(outputDirectory)
-                self.seriesOutputDirectoriesList.append(outputDirectory)
+            (studyDirectory, seriesDirectory) = self.formatter.getOutputDirectories(df, self.dicomOutputDirectory, dos)
+            if (not seriesDirectory in self.seriesOutputDirectoriesList):
+                os_utilities.createDirectoryIfNeeded(seriesDirectory)
+                self.seriesOutputDirectoriesList.append(seriesDirectory)
+                if (not studyDirectory in self.studyOutputDirectoriesList):
+                  self.studyOutputDirectoriesList.append(studyDirectory)
 
-            outputName = self.formatter.getOutputName(df)
+            outputName = self.formatter.getOutputFilename(df)
             #print("%s -> %s/%s" % (f, outputDirectory, outputName))
-            self.renameItemsDict[f] = "%s/%s" % (outputDirectory, outputName)
+            self.renameItemsDict[f] = "%s/%s" % (seriesDirectory, outputName)
 
     def copyData(self):
         for itemName in self.renameItemsDict.keys():
@@ -83,7 +86,10 @@ class dicomOrganizer:
         # print("\tSuccess: %s " % (success))
         return success
 
-    def getOutputDirectoryList(self):
+    def getOutputStudyDirectoryList(self):
+        return self.studyOutputDirectoriesList
+    
+    def getOutputSeriesDirectoryList(self):
         return self.seriesOutputDirectoriesList
     
     def dicomFilesAreTheSame(self, file1, file2):

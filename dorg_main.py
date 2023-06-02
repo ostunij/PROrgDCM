@@ -27,11 +27,12 @@ try:
     dos = dicomOrganizerSOPSuffixList()
     do.organizeData(origFoundData, dos)
     do.copyData()
-    outputDirectoryList = do.getOutputDirectoryList()
-
+    outputStudyDirectoryList = do.getOutputStudyDirectoryList()
+    outputSeriesDirectoryList = do.getOutputSeriesDirectoryList()
     dor = readmeCreator()
-    dor.createSeriesReadmeFiles(outputDirectoryList)
-
+    dor.createSeriesReadmeFiles(outputSeriesDirectoryList)
+    dor.createStudyReadmeFiles(outputStudyDirectoryList, dos)
+    #print("study list is %s" % (outputStudyDirectoryList))
     #do.setTimes()
 except KeyboardInterrupt:
     print ("\nExiting - interrupt received")
