@@ -31,7 +31,7 @@ class dicomOrganizer:
             doa.getOutputDirectory())
 
         os_utilities.createDirectoryIfNeeded(self.dicomOutputDirectory)
-        self.prefix = doa.getPrefix()
+        #self.prefix = doa.getPrefix()
         self.formatter = doa.getFormatter()
 
     def organizeData(self, fileList, dos):
@@ -46,6 +46,7 @@ class dicomOrganizer:
                 continue
 
             (studyDirectory, seriesDirectory) = self.formatter.getOutputDirectories(df, self.dicomOutputDirectory, dos)
+            #print("Checking study: %s and series: %s" % (studyDirectory, seriesDirectory))
             if (not seriesDirectory in self.seriesOutputDirectoriesList):
                 os_utilities.createDirectoryIfNeeded(seriesDirectory)
                 self.seriesOutputDirectoriesList.append(seriesDirectory)

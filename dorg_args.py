@@ -1,8 +1,7 @@
 import sys
 import os
 from optparse import OptionParser
-from dorg_format_type01 import dicomFormatter_type01
-from dorg_format_type02 import dicomFormatter_type02
+from dorg_formatter import dicomFormatter
 
 class dicomOrganizerArgs:
     def __init__(self):
@@ -20,18 +19,16 @@ class dicomOrganizerArgs:
                                dest="outdir", help="output directory -- default is cwd", default=os.getcwd())
         self.parser.add_option("-r", "--removeorigdata", action="store_true", dest="removeorigdata",
                                help="remove original data after organization", default=False)
-        self.parser.add_option("-p", "--prefix", action="store", type="string", dest="prefix",
-                               help="DICOM file prefix -- default is to look at all files", default=None)
         self.parser.add_option("-n", "--notimestamps", action="store_false",
                                dest="usetimestamps", help="don't set time stamps", default=True)
+        self.parser.add_option("-s", "--showPatientName", action="store_true",
+                               dest="showpatientname", help="show patient name in directory structure", default=False)
         self.parser.add_option("-w", "--writeover", action="store_true", dest="overwrite",
                                help="write over existing organized data", default=False)
         self.parser.add_option("-v", "--verbose", action="store_true",
                                dest="verbose", help="verbose mode", default=False)
         self.parser.add_option("-h", "--help", action="store_true",
                                dest="help", help="print help", default=False)
-        self.parser.add_option("-f", "--format", action="store",
-                               type="int", dest="formattype", help="format type", default=1)
 
     def readOptions(self):
         (options, args) = self.parser.parse_args()
@@ -44,8 +41,7 @@ class dicomOrganizerArgs:
         self.overwrite = options.overwrite
         self.verbose = options.verbose
         self.outdir = options.outdir
-        self.prefix = options.prefix
-        self.formattype = options.formattype
+        self.showpatientname = options.showpatientname
         self.programArgs = args
 
     def checkOptions(self):
@@ -117,8 +113,8 @@ class dicomOrganizerArgs:
 
         if self.overwrite:
             print("\tExisting organized files will be overwritten if they exist")
-        if self.prefix:
-            print("\tOutput File Prefix:  %s " % self.prefix)
+        if self.showpatientname:
+            print("\tPatient Name will be included in output directory structure")
         print()
 
     def getVerboseMode(self):
@@ -130,12 +126,5 @@ class dicomOrganizerArgs:
     def getOutputDirectory(self):
         return self.seriesOutputDirectory
 
-    def getPrefix(self):
-        return self.prefix
-
     def getFormatter(self):
-        if (self.formattype == 1):
-            formatter = dicomFormatter_type01()
-        elif (self.formattype == 2):
-            formatter = dicomFormatter_type02()
-        return formatter
+        return dicomFormatter(self.showpatientname)

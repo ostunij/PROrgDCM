@@ -1,39 +1,40 @@
 #"""
-#Copyright (C) 2004-2011, John Ostuni
-#All rights reserved. 
-
 #John Ostuni, ostunij@mail.nih.gov
-#Version 20230501
+#Version 202306
 #"""
 
+import datetime
 import sys
 from dorg_organizer import dicomOrganizer
 from dorg_sopSuffixList import dicomOrganizerSOPSuffixList
 from dorg_args import dicomOrganizerArgs
-from dorg_finder import dicomOrganizerFinder
+from dorg_filefinder import DCMfileFinder
 from dorg_touch import dicomOrganizerTouch
 from dorg_readmes import readmeCreator
 
 try:
+    currentDateTimeStamp = datetime.datetime.now()
     doa = dicomOrganizerArgs()
-    dot = dicomOrganizerTouch()
-
-    dof = dicomOrganizerFinder(doa)
+    
+    dof = DCMfileFinder(doa)
     origFoundData = dof.getDICOMData()
 
-    
-
-    do = dicomOrganizer(doa)
     dos = dicomOrganizerSOPSuffixList()
+    do = dicomOrganizer(doa)
+   
     do.organizeData(origFoundData, dos)
     do.copyData()
+
     outputStudyDirectoryList = do.getOutputStudyDirectoryList()
     outputSeriesDirectoryList = do.getOutputSeriesDirectoryList()
+
     dor = readmeCreator()
     dor.createSeriesReadmeFiles(outputSeriesDirectoryList)
     dor.createStudyReadmeFiles(outputStudyDirectoryList, dos)
-    #print("study list is %s" % (outputStudyDirectoryList))
-    #do.setTimes()
+
+    dot = dicomOrganizerTouch(outputStudyDirectoryList, currentDateTimeStamp)
+    dot.setTimeStamps()
+    
 except KeyboardInterrupt:
     print ("\nExiting - interrupt received")
 except AssertionError:

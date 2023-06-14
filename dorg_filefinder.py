@@ -2,7 +2,7 @@ import sys
 import os
 import glob
 
-class dicomOrganizerFinder:
+class DCMfileFinder:
     def __init__(self, do_args):
         self.fileList = []
         self.readArguments(do_args)
