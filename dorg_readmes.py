@@ -1,7 +1,7 @@
-import pydicom
 import glob
 import os
 import dorg_utilities
+
 
 class readmeCreator():
     def _init__(self):
@@ -9,10 +9,13 @@ class readmeCreator():
 
     def createSeriesReadmeFiles(self, seriesDirectoryList):
         for seriesDir in seriesDirectoryList:
-            self.createSeriesReadmeFile(seriesDir)
+            try:
+                self.createSeriesReadmeFile(seriesDir)
+            except:
+                pass
 
     def createSeriesReadmeFile(self, seriesDir):
-        readmefile = "%s/Readme_Series.txt" % (seriesDir)
+        readmefile = "%s/Readme-Series.txt" % (seriesDir)
         searchString = "%s/*.dcm" % (seriesDir)
         sampleFiles = glob.glob(seriesDir+"/*.dcm")
         sampleFiles.sort()
@@ -20,31 +23,27 @@ class readmeCreator():
         if (len(sampleFiles) == 0):
             return
         f = open(readmefile, 'w')
-        ds = pydicom.dcmread(dicomFile, stop_before_pixels=True)
-        for d in ds:
-            if (d.VR != "SQ") and (not d.is_private) and (not d.is_empty):
-                line = "%s: %s\n" % (d.name, d.value)
-                f.write(line)
+        ds = dorg_utilities.getDataSetFromFile(dicomFile)
+        if (ds is not None):
+            for d in ds:
+                if (d.VR != "SQ") and (not d.is_private) and (not d.is_empty):
+                    line = "%s: %s\n" % (d.name, d.value)
+                    f.write(line)
         f.close()
 
-    def createStudyReadmeFiles(self, studyDirectoryList, dos):
+    def createStudyReadmeFiles(self, studyDirectoryList):
         for studyDir in studyDirectoryList:
-            self.createStudyReadmeFile(studyDir, dos)
+            self.createStudyReadmeFile(studyDir)
 
-    def createStudyReadmeFile(self, studyDir, dos):
-        readmefile = "%s/Readme_Study.txt" % (studyDir)
+    
+    def createStudyReadmeFile(self, studyDir):
+        readmefile = "%s/Readme-Study.txt" % (studyDir)
         seriesDirsFound = []
 
-        searchString = "%s/*/Readme_Series.txt" % (studyDir)
+        searchString = "%s/*/Readme-Series.txt" % (studyDir)
         sList = glob.glob(searchString)
         if (len(sList) > 0):
             seriesDirsFound.extend(sList)
-
-        searchString = "%s/*/*/Readme_Series.txt" % (studyDir)
-        sList = glob.glob(searchString)
-        if (len(sList) > 0):
-            seriesDirsFound.extend(sList)
-
         f = open(readmefile, 'w')
 
         studyInformationWritten = False
@@ -54,7 +53,9 @@ class readmeCreator():
             sampleFiles.sort()
             count = len(sampleFiles)
             dicomFile = sampleFiles[0]
-            ds = pydicom.dcmread(dicomFile, stop_before_pixels=True)
+            ds = dorg_utilities.getDataSetFromFile(dicomFile)
+            if (ds is None):
+                continue
             if (len(sampleFiles) == 0):
                 continue
             if (not studyInformationWritten):
@@ -80,11 +81,11 @@ class readmeCreator():
                 f.write(line)
                 studyInformationWritten = True
 
-            seriesDescription = dorg_utilities.getSeriesDescription(ds)
-            seriesNumber = dorg_utilities.getSeriesNumber(ds)
-            seriesType = dorg_utilities.getSOPprefix(ds, dos)
+            seriesDirectory = os.path.dirname(seriesDirFound)
+            seriesDirectoryShort = os.path.basename(seriesDirectory)
+            seriesDescription = dorg_utilities.getSeriesDescriptionFull(ds)
 
-            line = "  Series Description: %18s,  Series Type: %s,  Series Number: %s,  Number Images: %s\n" % (
-                seriesDescription, seriesType, seriesNumber, len(sampleFiles))
+            line = "  Directory: %8s, Images: %4d, Description: %s\n" % (
+                seriesDirectoryShort, len(sampleFiles), seriesDescription)
             f.write(line)
         f.close()

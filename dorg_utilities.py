@@ -1,29 +1,41 @@
-import os
 import re
+import pydicom
+
+
+def getDataSetFromFile(f):
+    try:
+        ds = pydicom.dcmread(f, stop_before_pixels=True)
+    except:
+        ds = None
+        print("file %s has null data set" % (f))
+    return ds
+
 
 def getPatientName(fileDataSet):
     possibleTagList = []
     possibleTagList.append((0x0010, 0x0010))  # patient Name
     valueFound = False
     defaultValue = "UNKNOWN_SUBJECT"
+    try:
+        for tag in possibleTagList:
+            if tag in fileDataSet:
+                tagValue = fileDataSet[tag].value
+                tagValueString = "%s" % tagValue
+                if (tagValueString is not None and len(tagValueString.strip()) > 0):
+                    valueFound = True
+                    break
+    except:
+        valueFound = False
 
-    for tag in possibleTagList:
-        if tag in fileDataSet:
-            tagValue = fileDataSet[tag].value
-            tagValueString = "%s" % tagValue
-            if (tagValueString is not None and len(tagValueString.strip()) > 0):
-                valueFound = True
-                break
     if valueFound:
         tagValueString = re.sub('[^a-zA-Z0-9_]', '_', tagValueString)
         tagValueString = re.sub('_+', '_', tagValueString)
         tagValueString = re.sub('^_', '', tagValueString)
         tagValueString = re.sub('_$', '', tagValueString)
+        tagValueString = tagValueString.strip()
+        tagValueString = tagValueString.upper()
     else:
         tagValueString = defaultValue
-
-    tagValueString = tagValueString.strip()
-    tagValueString = tagValueString.upper()
 
     return tagValueString
 
@@ -33,22 +45,24 @@ def getPatientID(fileDataSet):
     possibleTagList.append((0x0010, 0x0020))  # patient ID
     valueFound = False
     defaultValue = "00000000"
+    try:
+        for tag in possibleTagList:
+            if tag in fileDataSet:
+                tagValue = fileDataSet[tag].value
+                tagValueString = "%s" % tagValue
+                tagValueString = re.sub('[-_\s]', '', tagValueString)
+                if (tagValueString is not None and len(tagValueString.strip()) > 0):
+                    valueFound = True
+                    break
+    except:
+        valueFound = False
 
-    for tag in possibleTagList:
-        if tag in fileDataSet:
-            tagValue = fileDataSet[tag].value
-            tagValueString = "%s" % tagValue
-            tagValueString = re.sub('[-_\s]', '', tagValueString)
-            while (len(tagValueString) < 8):
-                tagValueString = "0%s" % tagValueString
-            if (tagValueString is not None and len(tagValueString.strip()) > 0):
-                valueFound = True
-                break
-
-    if (not valueFound):
+    if valueFound:
+        tagValueString = tagValueString.strip()
+        while (len(tagValueString) < 8):
+            tagValueString = "0%s" % tagValueString
+    else:
         tagValueString = defaultValue
-
-    tagValueString = tagValueString.strip()
 
     return tagValueString
 
@@ -61,24 +75,26 @@ def getStudyDate(fileDataSet):
     possibleTagList.append((0x0008, 0x0021))  # series Date
     valueFound = False
     defaultValue = "19000101"
+    try:
+        for tag in possibleTagList:
+            if tag in fileDataSet:
+                tagValue = fileDataSet[tag].value
+                tagValueString = "%s" % tagValue
+                if (len(tagValueString.strip()) == 8):
+                    valueFound = True
+                    break
+    except:
+        valueFound = False
 
-    for tag in possibleTagList:
-        if tag in fileDataSet:
-            tagValue = fileDataSet[tag].value
-            tagValueString = "%s" % tagValue
-            if (len(tagValueString.strip()) == 8):
-                valueFound = True
-                break
+    if valueFound:
+        value = tagValueString.strip()
+        year = value[0:4]
+        month = value[4:6]
+        day = value[6:8]
+        dateString = '%s%s%s' % (year, month, day)
+    else:
+        dateString = defaultValue
 
-    if not valueFound:
-        tagValueString = defaultValue
-
-    value = tagValueString.strip()
-    year = value[0:4]
-    month = value[4:6]
-    day = value[6:8]
-    dateString = '%s_%s_%s' % (year, month, day)
-    dateString = '%s%s%s' % (year, month, day)
     return dateString
 
 
@@ -91,26 +107,28 @@ def getSeriesDateTokens(fileDataSet):
     valueFound = False
     defaultYear = "1900"
     defaultMonth = "01"
-    defaultDay = "01" 
+    defaultDay = "01"
+    try:
+        for tag in possibleTagList:
+            if tag in fileDataSet:
+                tagValue = fileDataSet[tag].value
+                tagValueString = "%s" % tagValue
+                if (len(tagValueString.strip()) == 8):
+                    valueFound = True
+                    break
+    except:
+        valueFound = False
 
-    for tag in possibleTagList:
-        if tag in fileDataSet:
-            tagValue = fileDataSet[tag].value
-            tagValueString = "%s" % tagValue
-            if (len(tagValueString.strip()) == 8):
-                valueFound = True
-                break
+    if valueFound:
+        value = tagValueString.strip()
+        year = value[0:4]
+        month = value[4:6]
+        day = value[6:8]
+    else:
+        year = defaultYear
+        month = defaultMonth
+        day = defaultDay
 
-    if not valueFound:
-        return (defaultYear, defaultMonth, defaultDay)
-    
-
-    value = tagValueString.strip()
-    year = value[0:4]
-    month = value[4:6]
-    day = value[6:8]
-    #dateString = '%s_%s_%s' % (year, month, day)
-    #dateString = '%s.%s.%s' % (year, month, day)
     return (year, month, day)
 
 
@@ -124,79 +142,99 @@ def getSeriesTimeTokens(fileDataSet):
     defaultHour = "12"
     defaultMinute = "00"
     defaultSecond = "00"
+    try:
+        for tag in possibleTagList:
+            if tag in fileDataSet:
+                tagValue = fileDataSet[tag].value
+                tagValueString = "%s" % tagValue
+                if (len(tagValueString.strip()) == 8):
+                    valueFound = True
+                    break
+    except:
+        valueFound = False
 
-    for tag in possibleTagList:
-        if tag in fileDataSet:
-            tagValue = fileDataSet[tag].value
-            tagValueString = "%s" % tagValue
-            if (len(tagValueString.strip()) == 8):
-                valueFound = True
-                break
+    if valueFound:
+        hour = tagValueString[0:4]
+        minute = tagValueString[4:6]
+        second = tagValueString[6:8]
+    else:
+        hour = defaultHour
+        minute = defaultMinute
+        second = defaultSecond
 
-    if not valueFound:
-        return (defaultHour, defaultMinute, defaultSecond)
-
-    hour = tagValueString[0:4]
-    minute = tagValueString[4:6]
-    second = tagValueString[6:8]
     return (hour, minute, second)
-
 
 
 def getStudyID(fileDataSet):
     possibleTagList = []
     possibleTagList.append((0x0020, 0x0010))  # study ID
-
     valueFound = False
     defaultValue = "00000"
+    try:
+        for tag in possibleTagList:
+            if tag in fileDataSet:
+                tagValue = fileDataSet[tag].value
+                tagValueString = "%s" % tagValue
+                valueFound = True
+                break
+    except:
+        valueFound = False
 
-    for tag in possibleTagList:
-        if tag in fileDataSet:
-            tagValue = fileDataSet[tag].value
-            tagValueString = "%s" % tagValue
-            valueFound = True
-            break
-
-    if not valueFound:
+    if valueFound:
+        tagValueString = tagValueString.strip()
+        while (len(tagValueString) < 5):
+            tagValueString = "0%s" % (tagValueString)
+    else:
         tagValueString = defaultValue
-
-    tagValueString = tagValueString.strip()
-
-    while (len(tagValueString) < 5):
-        tagValueString = "0%s" % (tagValueString)
 
     return tagValueString
 
 
 def getSeriesDescription(fileDataSet):
+    tagValueString = getSeriesDescriptionFull(fileDataSet)
+    tagValueString = re.sub('[^a-zA-Z0-9_]', '_', tagValueString)
+    tagValueString = re.sub('_+', '_', tagValueString)
+    tagValueString = re.sub('_', '', tagValueString)
+    if (len(tagValueString) > 8):
+        tagValueString = tagValueString[0:8]
+    return tagValueString
+
+
+def getSeriesDescriptionFull(fileDataSet):
     possibleTagList = []
     possibleTagList.append((0x0008, 0x103E))  # series Description
 
     valueFound = False
-    defaultValue = "NO_DESCRIPTION"
-
-    for tag in possibleTagList:
-        if tag in fileDataSet:
-            tagValue = fileDataSet[tag].value
-            tagValueString = "%s" % tagValue
-            tagValueString = tagValueString.strip()
-            valueFound = True
-            break
+    defaultValue = "no_desc"
+    try:
+        for tag in possibleTagList:
+            if tag in fileDataSet:
+                tagValue = fileDataSet[tag].value
+                tagValueString = "%s" % tagValue
+                valueFound = True
+                break
+    except:
+        valueFound = False
 
     if valueFound:
-        tagValueString = re.sub('[^a-zA-Z0-9_]', '_', tagValueString)
-        tagValueString = re.sub('_+', '_', tagValueString)
-        #tagValueString = re.sub('^_', '', tagValueString)
-        #tagValueString = re.sub('_$', '', tagValueString)
-        tagValueString = re.sub('_', '', tagValueString)
+        tagValueString = tagValueString.strip()
+        tagValueString = tagValueString.lower()
     else:
-        tagValue = defaultValue
-        tagValueString = "%s" % tagValue
-
-    tagValueString = tagValueString.strip()
-    tagValueString = tagValueString.lower()
+        tagValueString = defaultValue
 
     return tagValueString
+
+
+def SeriesDescriptionFromFile(dicomFile):
+    defaultValue = "no_desc"
+    try:
+        ds = pydicom.dcmread(dicomFile, stop_before_pixels=True)
+        seriesDescription = getSeriesDescription(ds)
+    except:
+        seriesDescription = defaultValue
+
+    return seriesDescription
+
 
 def getAccessionNumber(fileDataSet):
     possibleTagList = []
@@ -204,58 +242,50 @@ def getAccessionNumber(fileDataSet):
 
     valueFound = False
     defaultValue = "No_Accession_Number"
-
-    for tag in possibleTagList:
-        if tag in fileDataSet:
-            tagValue = fileDataSet[tag].value
-            print("tag value is " + tagValue)
-            tagValueString = "%s" % tagValue
-            tagValueString = tagValueString.strip()
-            valueFound = True
-            break
+    try:
+        for tag in possibleTagList:
+            if tag in fileDataSet:
+                tagValue = fileDataSet[tag].value
+                tagValueString = "%s" % tagValue
+                print("AN found %s" % (tagValueString))
+                valueFound = True
+                break
+    except:
+        valueFound = False
 
     if valueFound:
-        tagValueString = re.sub('[^a-zA-Z0-9_]', '_', tagValueString)
+        tagValueString = re.sub('[^-a-zA-Z0-9_]', '_', tagValueString)
         tagValueString = re.sub('_+', '_', tagValueString)
-        #tagValueString = re.sub('^_', '', tagValueString)
-        #tagValueString = re.sub('_$', '', tagValueString)
         tagValueString = re.sub('_', '', tagValueString)
+        tagValueString = tagValueString.strip()
     else:
-        tagValue = defaultValue
-        tagValueString = "%s" % tagValue
-
-    tagValueString = tagValueString.strip()
-    tagValueString = tagValueString.lower()
+        tagValueString = defaultValue
 
     return tagValueString
+
 
 def getStationName(fileDataSet):
     possibleTagList = []
     possibleTagList.append((0x0008, 0x1010))  # station Name
     valueFound = False
     defaultValue = "None_Provided"
-
-    for tag in possibleTagList:
-        if tag in fileDataSet:
-            tagValue = fileDataSet[tag].value
-            print("tag value is " + tagValue)
-            tagValueString = "%s" % tagValue
-            tagValueString = tagValueString.strip()
-            valueFound = True
-            break
+    try:
+        for tag in possibleTagList:
+            if tag in fileDataSet:
+                tagValue = fileDataSet[tag].value
+                tagValueString = "%s" % tagValue
+                valueFound = True
+                break
+    except:
+        valueFound = False
 
     if valueFound:
-        tagValueString = re.sub('[^a-zA-Z0-9_]', '_', tagValueString)
+        tagValueString = re.sub('[^-a-zA-Z0-9_]', '_', tagValueString)
         tagValueString = re.sub('_+', '_', tagValueString)
-        #tagValueString = re.sub('^_', '', tagValueString)
-        #tagValueString = re.sub('_$', '', tagValueString)
         tagValueString = re.sub('_', '', tagValueString)
+        tagValueString = tagValueString.strip()
     else:
-        tagValue = defaultValue
-        tagValueString = "%s" % tagValue
-
-    tagValueString = tagValueString.strip()
-    tagValueString = tagValueString.lower()
+        tagValueString = defaultValue
 
     return tagValueString
 
@@ -265,20 +295,21 @@ def getSeriesNumber(fileDataSet):
     possibleTagList.append((0x0020, 0x0011))  # series Number
 
     valueFound = False
-    defaultValue = 1
+    defaultValue = "0000"
+    try:
+        for tag in possibleTagList:
+            if tag in fileDataSet:
+                tagValue = fileDataSet[tag].value
+                tagValueString = "%s" % (tagValue)
+                valueFound = True
+    except:
+        valueFound = False
 
-    for tag in possibleTagList:
-        if tag in fileDataSet:
-            tagValue = fileDataSet[tag].value
-            tagValueString = "%s" % (tagValue)
-            valueFound = True
-
-    if not valueFound:
-        tagValue = defaultValue
-        tagValueString = "%s" % (tagValue)
-
-    while (len(tagValueString) < 4):
-        tagValueString = "0%s" % (tagValueString)
+    if valueFound:
+        while (len(tagValueString) < 4):
+            tagValueString = "0%s" % (tagValueString)
+    else:
+        tagValueString = defaultValue
 
     return tagValueString
 
@@ -288,22 +319,25 @@ def getInstanceNumber(fileDataSet):
     possibleTagList.append((0x0020, 0x0013))  # instance Number
 
     valueFound = False
-    defaultValue = 1
+    defaultValue = "00000"
 
-    for tag in possibleTagList:
-        if tag in fileDataSet:
-            tagValue = fileDataSet[tag].value
-            tagValueString = "%s" % (tagValue)
-            valueFound = True
+    try:
+        for tag in possibleTagList:
+            if tag in fileDataSet:
+                tagValue = fileDataSet[tag].value
+                tagValueString = "%s" % (tagValue)
+                valueFound = True
+    except:
+        valueFound = False
 
-    if not valueFound:
-        tagValue = defaultValue
-        tagValueString = "%s" % (tagValue)
-
-    while (len(tagValueString) < 5):
-        tagValueString = "0%s" % (tagValueString)
+    if valueFound:
+        while (len(tagValueString) < 5):
+            tagValueString = "0%s" % (tagValueString)
+    else:
+        tagValueString = defaultValue
 
     return tagValueString
+
 
 def getSOPprefix(fileDataSet, dos):
     possibleTagList = []
@@ -311,12 +345,14 @@ def getSOPprefix(fileDataSet, dos):
 
     valueFound = False
     defaultValue = "uk"
-
-    for tag in possibleTagList:
-        if tag in fileDataSet:
-            tagValue = fileDataSet[tag].value
-            tagValueString = "%s" % (tagValue)
-            valueFound = True
+    try:
+        for tag in possibleTagList:
+            if tag in fileDataSet:
+                tagValue = fileDataSet[tag].value
+                tagValueString = "%s" % (tagValue)
+                valueFound = True
+    except:
+        valueFound = False
 
     if (valueFound):
         prefix = dos.getPrefix(tagValueString)
@@ -324,6 +360,7 @@ def getSOPprefix(fileDataSet, dos):
         prefix = defaultValue
 
     return prefix
+
 
 def getDateTimeString(fileDataSet):
     (year, month, day) = getSeriesDateTokens(fileDataSet)

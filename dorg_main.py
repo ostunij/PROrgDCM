@@ -30,7 +30,7 @@ try:
 
     dor = readmeCreator()
     dor.createSeriesReadmeFiles(outputSeriesDirectoryList)
-    dor.createStudyReadmeFiles(outputStudyDirectoryList, dos)
+    dor.createStudyReadmeFiles(outputStudyDirectoryList)
 
     dot = dicomOrganizerTouch(outputStudyDirectoryList, currentDateTimeStamp)
     dot.setTimeStamps()

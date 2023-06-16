@@ -12,9 +12,9 @@ class dicomOrganizerTouch:
 
     def setTimeStamps(self):
         for studyItem in self.studyList:
-            print("DOT: -----> Checking study: %s" % (studyItem))
+            #print("DOT: -----> Checking study: %s" % (studyItem))
             seriesDirectoryList = self.findSeriesDirectories(studyItem)
-            print("\tDOT:  Checking series: %s" % (seriesDirectoryList))
+            #print("\tDOT:  Checking series: %s" % (seriesDirectoryList))
             for seriesDirectory in seriesDirectoryList:
                 seriesDCMFileList = self.getSeriesDCMFilesList(seriesDirectory)
                 if (len(seriesDCMFileList) > 0):
