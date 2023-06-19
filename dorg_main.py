@@ -4,6 +4,7 @@
 #"""
 
 import datetime
+import os
 import sys
 from dorg_organizer import dicomOrganizer
 from dorg_sopSuffixList import dicomOrganizerSOPSuffixList
@@ -14,6 +15,8 @@ from dorg_readmes import readmeCreator
 
 try:
     currentDateTimeStamp = datetime.datetime.now()
+    startingDirectory = os.getcwd()
+
     doa = dicomOrganizerArgs()
     
     dof = DCMfileFinder(doa)
@@ -23,7 +26,11 @@ try:
     do = dicomOrganizer(doa)
    
     do.organizeData(origFoundData, dos)
-    do.copyData()
+    if doa.removeorigdata:
+        do.moveData(doa.overwrite, doa.verbose)
+        
+    else:
+        do.copyData(doa.overwrite, doa.verbose)
 
     outputStudyDirectoryList = do.getOutputStudyDirectoryList()
     outputSeriesDirectoryList = do.getOutputSeriesDirectoryList()
@@ -31,10 +38,20 @@ try:
     dor = readmeCreator()
     dor.createSeriesReadmeFiles(outputSeriesDirectoryList)
     dor.createStudyReadmeFiles(outputStudyDirectoryList)
+    if doa.usetimestamps:
+        dot = dicomOrganizerTouch(outputStudyDirectoryList, currentDateTimeStamp)
+        dot.setTimeStamps()
 
-    dot = dicomOrganizerTouch(outputStudyDirectoryList, currentDateTimeStamp)
-    dot.setTimeStamps()
-    
+    #cleanup
+    os.chdir(startingDirectory)
+    if doa.removeorigdata:
+        inputSeriesDirectoryList = dof.getInputSeriesDirectoryList()
+        for inputSeriesDirectory in inputSeriesDirectoryList:
+            if (not os.listdir(inputSeriesDirectory)):
+                print("EMPTY checking directory %s from %s" % (inputSeriesDirectory, os.getcwd()))
+                os.rmdir(inputSeriesDirectory)
+        
+
 except KeyboardInterrupt:
     print ("\nExiting - interrupt received")
 except AssertionError:

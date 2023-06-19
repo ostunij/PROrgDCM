@@ -48,17 +48,19 @@ class readmeCreator():
 
         studyInformationWritten = False
         for seriesDirFound in seriesDirsFound:
-            dirname = os.path.dirname(seriesDirFound)
-            sampleFiles = glob.glob(dirname+"/*.dcm")
-            sampleFiles.sort()
-            count = len(sampleFiles)
-            dicomFile = sampleFiles[0]
-            ds = dorg_utilities.getDataSetFromFile(dicomFile)
-            if (ds is None):
-                continue
-            if (len(sampleFiles) == 0):
-                continue
-            if (not studyInformationWritten):
+            currentSeriesDir = os.path.dirname(seriesDirFound)
+            currentSeriesDir = os.path.basename(currentSeriesDir)
+            if (os.path.basename(currentSeriesDir).startswith("mr_")):
+                dirname = os.path.dirname(seriesDirFound)
+                sampleFiles = glob.glob(dirname+"/*.dcm")
+                if (len(sampleFiles) == 0):
+                    continue
+                sampleFiles.sort()
+                dicomFile = sampleFiles[0]
+                ds = dorg_utilities.getDataSetFromFile(dicomFile)
+                if (ds is None):
+                    continue
+    
                 subjectName = dorg_utilities.getPatientName(ds)
                 line = "Subject Name: %s\n" % (subjectName)
                 f.write(line)
@@ -75,12 +77,24 @@ class readmeCreator():
                 line = "Accession Number: %s\n" % (accessionNumber)
                 f.write(line)
                 stationName = dorg_utilities.getStationName(ds)
-                line = "Station Name: %s\n" % (stationName)
+                line = "MR Station Name: %s\n" % (stationName)
                 f.write(line)
                 line = "Series Information\n"
                 f.write(line)
-                studyInformationWritten = True
+                break
 
+        for seriesDirFound in seriesDirsFound:
+            dirname = os.path.dirname(seriesDirFound)
+            sampleFiles = glob.glob(dirname+"/*.dcm")
+            sampleFiles.sort()
+            count = len(sampleFiles)
+            dicomFile = sampleFiles[0]
+            ds = dorg_utilities.getDataSetFromFile(dicomFile)
+            if (ds is None):
+                continue
+            if (len(sampleFiles) == 0):
+                continue
+            
             seriesDirectory = os.path.dirname(seriesDirFound)
             seriesDirectoryShort = os.path.basename(seriesDirectory)
             seriesDescription = dorg_utilities.getSeriesDescriptionFull(ds)

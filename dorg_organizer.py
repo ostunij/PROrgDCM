@@ -6,8 +6,6 @@ import shutil
 import os_utilities
 from dorg_args import dicomOrganizerArgs
 
-
-
 class dicomOrganizer:
     def __init__(self, do_args):
 
@@ -31,7 +29,7 @@ class dicomOrganizer:
             doa.getOutputDirectory())
 
         os_utilities.createDirectoryIfNeeded(self.dicomOutputDirectory)
-        #self.prefix = doa.getPrefix()
+        # self.prefix = doa.getPrefix()
         self.formatter = doa.getFormatter()
 
     def organizeData(self, fileList, dos):
@@ -45,60 +43,104 @@ class dicomOrganizer:
                 self.fileList.remove(f)
                 continue
 
-            (studyDirectory, seriesDirectory) = self.formatter.getOutputDirectories(df, self.dicomOutputDirectory, dos)
-            #print("Checking study: %s and series: %s" % (studyDirectory, seriesDirectory))
+            (studyDirectory, seriesDirectory) = self.formatter.getOutputDirectories(
+                df, self.dicomOutputDirectory, dos)
             if (not seriesDirectory in self.seriesOutputDirectoriesList):
                 os_utilities.createDirectoryIfNeeded(seriesDirectory)
                 self.seriesOutputDirectoriesList.append(seriesDirectory)
                 if (not studyDirectory in self.studyOutputDirectoriesList):
-                  self.studyOutputDirectoriesList.append(studyDirectory)
+                    self.studyOutputDirectoriesList.append(studyDirectory)
 
             outputName = self.formatter.getOutputFilename(df)
-            #print("%s -> %s/%s" % (f, outputDirectory, outputName))
             self.renameItemsDict[f] = "%s/%s" % (seriesDirectory, outputName)
 
-    def copyData(self):
+    def copyData(self, writeover, verbose):
         for itemName in self.renameItemsDict.keys():
             newItemName = self.renameItemsDict[itemName]
             index = 1
-
             newItemNameUpdated = newItemName
-            while (not self.copyFileAndVerify(itemName, newItemNameUpdated)):
+            if (verbose):
+                print("Copying %s to %s" % (itemName, newItemName))
+            while (not self.copyFileAndVerify(itemName, newItemNameUpdated, writeover, verbose)):
                 index = index + 1
                 newItemNameUpdated = self.getUpdatedVersionName(
                     newItemName, index)
+                print("Copy Not Performed: \n\tNow copying %s to %s" % (itemName, newItemNameUpdated))
 
-    def copyFileAndVerify(self, itemName, newItemName):
-        #print("Copying %s to %s" % (itemName, newItemName))
-        success = False
+    def moveData(self, writeover, verbose):
+        for itemName in self.renameItemsDict.keys():
+            newItemName = self.renameItemsDict[itemName]
+            index = 1
+            newItemNameUpdated = newItemName
+            if (verbose):
+                print("Moving %s to %s" % (itemName, newItemName))
+            while (not self.moveFileAndVerify(itemName, newItemNameUpdated, writeover, verbose)):
+                index = index + 1
+                newItemNameUpdated = self.getUpdatedVersionName(
+                    newItemName, index)
+                print("Move Not Performed: \n\tNow moving %s to %s" % (itemName, newItemNameUpdated))
 
+    def copyFileAndVerify(self, itemName, newItemName, writeover, verbose):
         if (not os.path.exists(newItemName)):
             shutil.copyfile(itemName, newItemName)
-
-        return True
+            return True
+        
+        if writeover:
+            if verbose:
+                print("\tCopied - Overwrite Mode Set\n")
+            shutil.copyfile(itemName, newItemName)
+            return True
 
         if (self.dicomFilesAreTheSame(itemName, newItemName)):
-            # os.remove(itemName)
-            success = True
-        elif (self.dicomPixelsAreTheSame(itemName, newItemName)):
-            # os.remove(itemName)
-            success = True
+            if verbose:
+                print("\tCopied - Identical Files Found\n")
+            shutil.copyfile(itemName, newItemName)
+            return True
 
-        # print("\tSuccess: %s " % (success))
-        return success
+        if (self.dicomPixelsAreTheSame(itemName, newItemName)):
+            if verbose:
+                print("\tCopied - Identical Pixel Data Found\n")
+            shutil.copyfile(itemName, newItemName)
+            return True
+
+        return False
+
+    def moveFileAndVerify(self, itemName, newItemName, writeover, verbose):
+        if (not os.path.exists(newItemName)):
+            shutil.move(itemName, newItemName)
+            return True
+
+        if writeover:
+            if verbose:
+                print("\Moved - Overwrite Mode Set\n")
+            shutil.movefile(itemName, newItemName)
+            return True
+
+        if (self.dicomFilesAreTheSame(itemName, newItemName)):
+            if verbose:
+                print("\Moved - Identical Files Found\n")
+            shutil.move(itemName, newItemName)
+            return True
+
+        if (self.dicomPixelsAreTheSame(itemName, newItemName)):
+            if verbose:
+                print("\Moved - Identical Pixel Data Found\n")
+            shutil.move(itemName, newItemName)
+            return True
+
+        return False
 
     def getOutputStudyDirectoryList(self):
         return self.studyOutputDirectoriesList
-    
+
     def getOutputSeriesDirectoryList(self):
         return self.seriesOutputDirectoriesList
-    
+
     def dicomFilesAreTheSame(self, file1, file2):
         sameFile = filecmp.cmp(file1, file2)
         return sameFile
 
     def dicomPixelsAreTheSame(self, file1, file2):
-        #print("Are files %s and %s the same Pixels: " % (file1, file2))
         df1 = pydicom.dcmread(file1)
         df2 = pydicom.dcmread(file2)
         try:
@@ -113,9 +155,7 @@ class dicomOrganizer:
             return samePixels
 
         if (len(pixels1) > 0):
-            print("pixel length is %s" % (len(pixels1)))
             samePixels = pixels1 == pixels2
-            print("\t %s" % (samePixels))
         return samePixels
 
     def sameInstanceUID(self, file1, file2):

@@ -247,7 +247,6 @@ def getAccessionNumber(fileDataSet):
             if tag in fileDataSet:
                 tagValue = fileDataSet[tag].value
                 tagValueString = "%s" % tagValue
-                print("AN found %s" % (tagValueString))
                 valueFound = True
                 break
     except:

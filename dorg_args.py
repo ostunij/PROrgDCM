@@ -33,7 +33,7 @@ class dicomOrganizerArgs:
     def readOptions(self):
         (options, args) = self.parser.parse_args()
         if options.help:
-            self.__preamble()
+            #self.__preamble()
             self.parser.print_help()
             sys.exit()
         self.usetimestamps = options.usetimestamps
