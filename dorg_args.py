@@ -3,16 +3,48 @@ import os
 from optparse import OptionParser
 from dorg_formatter import dicomFormatter
 
+
 class dicomOrganizerArgs:
     def __init__(self):
         usage = 'usage: %prog [options] directoryName'
         self.parser = OptionParser(usage=usage, add_help_option=False)
+        self.verifyPackages()
         self.setOptions()
         self.readOptions()
         self.checkOptions()
+
         if self.verbose:
-            self.preamble()
             self.printOptions()
+
+    def verifyPackages(self):
+        errorFound = False
+        errorMessage = ""
+        try:
+            import pydicom
+        except ImportError as e:
+            errorMessage += "e\n"
+            errorFound = True
+        try:
+            import filedate
+        except ImportError as e:
+            errorMessage += "e\n"
+            errorFound = True
+
+        try:
+            import filecmp
+        except ImportError as e:
+            errorMessage += "e\n"
+            errorFound = True
+
+        try:
+            import datetime
+        except ImportError as e:
+            errorMessage += "e\n"
+            errorFound = True
+
+        if (errorFound):
+            print("%s\n" % (errorMessage))
+            sys.exit(1)
 
     def setOptions(self):
         self.parser.add_option("-o", "--outdir", action="store", type="string",
@@ -28,12 +60,12 @@ class dicomOrganizerArgs:
         self.parser.add_option("-v", "--verbose", action="store_true",
                                dest="verbose", help="verbose mode", default=False)
         self.parser.add_option("-h", "--help", action="store_true",
-                               dest="help", help="print help", default=False)
+                               dest="help", help="show command line options", default=False)
 
     def readOptions(self):
         (options, args) = self.parser.parse_args()
         if options.help:
-            #self.__preamble()
+            # self.__preamble()
             self.parser.print_help()
             sys.exit()
         self.usetimestamps = options.usetimestamps
@@ -66,13 +98,11 @@ class dicomOrganizerArgs:
 
         if len(self.programArgs) == 0:
             sys.stderr.write('Error - no DICOM directories provided\n\n')
-            self.__preamble()
             self.parser.print_help()
             sys.exit(1)
 
         if len(self.programArgs) > 1:
             sys.stderr.write('Error - multiple DICOM directories provided\n\n')
-            self.__preamble()
             self.parser.print_help()
             sys.exit(1)
 

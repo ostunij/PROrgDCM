@@ -21,6 +21,8 @@ try:
     
     dof = DCMfileFinder(doa)
     origFoundData = dof.getDICOMData()
+    if (origFoundData is None):
+        sys.exit(1)
 
     dos = dicomOrganizerSOPSuffixList()
     do = dicomOrganizer(doa)

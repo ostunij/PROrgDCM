@@ -17,9 +17,9 @@ class DCMfileFinder:
         os.chdir(self.seriesInputDirectory)
         self.fileList = glob.glob("**/*.dcm", recursive=True)
         if len(self.fileList) == 0:
-            errorLine = 'No DICOM files found is %s -- exiting\n' % (self.programArgs)
+            errorLine = 'No DICOM files found in %s -- Exiting\n' % (self.seriesInputDirectory)
             sys.stderr.write(errorLine)
-            sys.exit(1)
+            return None
 
         for dcmfile in self.fileList:
             dcmfileDirectory = os.path.dirname(dcmfile)
