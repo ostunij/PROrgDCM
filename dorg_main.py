@@ -6,6 +6,7 @@
 import datetime
 import os
 import sys
+import pydicom
 from dorg_organizer import dicomOrganizer
 from dorg_sopSuffixList import dicomOrganizerSOPSuffixList
 from dorg_args import dicomOrganizerArgs
@@ -14,6 +15,7 @@ from dorg_touch import dicomOrganizerTouch
 from dorg_readmes import readmeCreator
 
 try:
+    pydicom.config.settings.reading_validation_mode = pydicom.config.IGNORE
     currentDateTimeStamp = datetime.datetime.now()
     startingDirectory = os.getcwd()
 
@@ -30,7 +32,6 @@ try:
     do.organizeData(origFoundData, dos)
     if doa.removeorigdata:
         do.moveData(doa.overwrite, doa.verbose)
-        
     else:
         do.copyData(doa.overwrite, doa.verbose)
 

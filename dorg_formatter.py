@@ -1,5 +1,6 @@
 import sys
 import re
+import os
 import pydicom
 import dorg_utilities
 import os_utilities
@@ -8,25 +9,30 @@ import os_utilities
 # FORMAT: /PREFIX_SERIESNUMBER
 # FORMAT: /SERIESDESCRIPTION_INSTANCENUMBER.dcm
 
+
 class dicomFormatter:
 
     def __init__(self, showpatientname):
         self.showpatientname = showpatientname
-        pass
+        # self.dicomImageToSeriesUID = {}
+        # self.seriesDirectoryToSeriesUID = {}
+        # self.dicomImageToSeriesDirectory = {}
 
-    def getOutputDirectories(self, df, outputDirectory, dos):
+    def getOutputDirectories(self, filename, df, outputDirectory, dos):
         patientName = dorg_utilities.getPatientName(df)
         patientID = dorg_utilities.getPatientID(df)
         studyDate = dorg_utilities.getStudyDate(df)
         studyID = dorg_utilities.getStudyID(df)
         seriesNumber = dorg_utilities.getSeriesNumber(df)
         prefix = dorg_utilities.getSOPprefix(df, dos)
-
-        #print("Patient Name of " + patientName)
-        #print("Patient ID of " + patientID)
-        #print("Study Date of " + studyDate)
-        #print("Study ID of " + studyID)
-        #print("Series Number of " + seriesNumber)
+        seriesUID = dorg_utilities.getSeriesUID(df)
+        #self.dicomImageToSeriesUID[os.path.abspath(filename)] = seriesUID
+        self.dicomImageToDirectory = []
+        # print("Patient Name of " + patientName)
+        # print("Patient ID of " + patientID)
+        # print("Study Date of " + studyDate)
+        # print("Study ID of " + studyID)
+        # print("Series Number of " + seriesNumber)
 
         path1 = "%s" % (outputDirectory)
         path2 = "%s" % (patientID)
@@ -36,17 +42,43 @@ class dicomFormatter:
 
         path2 = "%s-%s" % (studyDate, studyID)
         studyDirectory = os_utilities.joinPaths(patientDirectory, path2)
-       
+
         path2 = "%s_%s" % (prefix, seriesNumber)
-        seriesDirectory = os_utilities.joinPaths(studyDirectory, path2)
+        seriesDirectoryBase = os_utilities.joinPaths(studyDirectory, path2)
+
+        seriesDirectory = seriesDirectoryBase
+        useSeriesDirectory = False
+        index = 1
+        while (not useSeriesDirectory):
+            if os.path.isdir(seriesDirectory):
+                uidReadmeFile = "%s/SUID.txt" % seriesDirectory
+                if os.path.isfile(uidReadmeFile):
+                    f = open(uidReadmeFile, 'r')
+                    line = f.readline()
+                    f.close()
+
+                    if (line.strip() == seriesUID):
+                        useSeriesDirectory = True
+                    else:
+                        seriesDirectory = "%s_v%s" % (
+                            seriesDirectoryBase, index)
+                        index += 1
+                else:
+                    f = open(uidReadmeFile, 'w')
+                    line = "%s\n" % (seriesUID)
+                    f.write(line)
+                    useSeriesDirectory = True
+            else:
+                useSeriesDirectory = True
+        #self.dicomImageToSeriesDirectory[filename] = seriesDirectory
 
         return (studyDirectory, seriesDirectory)
 
     def getOutputFilename(self, df):
         seriesDescription = dorg_utilities.getSeriesDescription(df)
         instanceNumber = dorg_utilities.getInstanceNumber(df)
-        #print("Series Description of " + seriesDescription)
-        #print("Instance Number of " + instanceNumber)
+        # print("Series Description of " + seriesDescription)
+        # print("Instance Number of " + instanceNumber)
         fileName = "%s_%s.dcm" % (seriesDescription, instanceNumber)
 
         return fileName

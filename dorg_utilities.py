@@ -225,6 +225,7 @@ def getSeriesDescriptionFull(fileDataSet):
     return tagValueString
 
 
+
 def SeriesDescriptionFromFile(dicomFile):
     defaultValue = "no_desc"
     try:
@@ -234,6 +235,28 @@ def SeriesDescriptionFromFile(dicomFile):
         seriesDescription = defaultValue
 
     return seriesDescription
+
+def getSeriesUID(fileDataSet):
+    possibleTagList = []
+    possibleTagList.append((0x0020, 0x000E))  # series UID 
+    valueFound = False
+    defaultValue = "0"
+    try:
+        for tag in possibleTagList:
+            if tag in fileDataSet:
+                tagValue = fileDataSet[tag].value
+                tagValueString = "%s" % tagValue
+                valueFound = True
+                break
+    except:
+        valueFound = False
+
+    if valueFound:
+        tagValueString = tagValueString.strip()
+    else:
+        tagValueString = defaultValue
+
+    return tagValueString
 
 
 def getAccessionNumber(fileDataSet):

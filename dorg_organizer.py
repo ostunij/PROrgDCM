@@ -8,7 +8,6 @@ from dorg_args import dicomOrganizerArgs
 
 class dicomOrganizer:
     def __init__(self, do_args):
-
         # initialize dictionaries
         self.renameItemsDict = {}  # holds creation times for each file
         self.seriesCountDict = {}  # holds number of slices for each series
@@ -43,7 +42,7 @@ class dicomOrganizer:
                 self.fileList.remove(f)
                 continue
 
-            (studyDirectory, seriesDirectory) = self.formatter.getOutputDirectories(
+            (studyDirectory, seriesDirectory) = self.formatter.getOutputDirectories(f, 
                 df, self.dicomOutputDirectory, dos)
             if (not seriesDirectory in self.seriesOutputDirectoriesList):
                 os_utilities.createDirectoryIfNeeded(seriesDirectory)
@@ -59,26 +58,29 @@ class dicomOrganizer:
             newItemName = self.renameItemsDict[itemName]
             index = 1
             newItemNameUpdated = newItemName
-            if (verbose):
+            if verbose:
                 print("Copying %s to %s" % (itemName, newItemName))
             while (not self.copyFileAndVerify(itemName, newItemNameUpdated, writeover, verbose)):
                 index = index + 1
                 newItemNameUpdated = self.getUpdatedVersionName(
                     newItemName, index)
-                print("Copy Not Performed: \n\tNow copying %s to %s" % (itemName, newItemNameUpdated))
+                if verbose:
+                    print("Copy Not Performed: \n\tNow copying %s to %s" % (itemName, newItemNameUpdated))
 
     def moveData(self, writeover, verbose):
         for itemName in self.renameItemsDict.keys():
             newItemName = self.renameItemsDict[itemName]
+            #newItemDirectory = os.path.dirname(newItemName)
             index = 1
             newItemNameUpdated = newItemName
-            if (verbose):
+            if verbose:
                 print("Moving %s to %s" % (itemName, newItemName))
             while (not self.moveFileAndVerify(itemName, newItemNameUpdated, writeover, verbose)):
                 index = index + 1
                 newItemNameUpdated = self.getUpdatedVersionName(
                     newItemName, index)
-                print("Move Not Performed: \n\tNow moving %s to %s" % (itemName, newItemNameUpdated))
+                if verbose:
+                    print("Move Not Performed: \n\tNow moving %s to %s" % (itemName, newItemNameUpdated))
 
     def copyFileAndVerify(self, itemName, newItemName, writeover, verbose):
         if (not os.path.exists(newItemName)):
